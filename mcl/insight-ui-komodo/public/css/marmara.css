@@ -1,8 +1,8 @@
 .card-box {
   background-color: #fff;
   padding: 1rem 1.6rem 1.9rem 1.6rem;
-  -webkit-box-shadow: 0 0 35px 0 rgba(73,80,87,.15);
-  box-shadow: 0 0 35px 0 rgba(73,80,87,.15);
+  -webkit-box-shadow: 0 0 35px 0 rgba(73, 80, 87, 0.15);
+  box-shadow: 0 0 35px 0 rgba(73, 80, 87, 0.15);
   margin-bottom: 24px;
   border-radius: 0.5rem;
   margin-right: 3rem;
@@ -16,7 +16,7 @@
   text-align: left;
 }
 .black-40 {
-  color: rgba(0,0,0,.4);
+  color: rgba(0, 0, 0, 0.4);
 }
 
 .card-box > .icon {
@@ -78,6 +78,17 @@
 
 .marmara-chart-spacing {
   margin-bottom: 50px;
+}
+
+.marmara-chart-range-selector {
+  margin-left: 30px;
+  position: relative;
+  top: 0.1rem;
+  font-size: 1.4rem;
+}
+
+.marmara-chart-title {
+  display: inline-block;
 }
 
 @media (max-width: 1000px) {

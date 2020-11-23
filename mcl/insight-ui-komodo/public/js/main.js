@@ -858,6 +858,24 @@ function($scope, $routeParams, $location, $interval, Global, Stats, Sync, Chart)
   var syncInterval;
   $scope.global = Global;
   $scope.sync = {};
+  $scope.ranges = [{
+    name: '7d',
+    title: '7 days',
+  }, {
+    name: '30d',
+    title: '1 month',
+  }, {
+    name: '90d',
+    title: '3 months',
+  }, {
+    name: 'all',
+    title: 'All',
+  }];
+  $scope.selectedItem = $scope.ranges[1];
+
+  $scope.updateChartRange = function() {
+    $scope.getChartData();
+  };
 
   $scope.getStats = function() {
     Stats.get({},
@@ -902,6 +920,7 @@ function($scope, $routeParams, $location, $interval, Global, Stats, Sync, Chart)
 
   $scope.getChartData = function() {
     $scope.loading = true;
+
     var chartTypeEnum = [{
       title: 'Total Normals',
       name: 'TotalNormals'
@@ -927,7 +946,7 @@ function($scope, $routeParams, $location, $interval, Global, Stats, Sync, Chart)
       'Dec',
     ];
 
-    Chart.get({},
+    Chart.get({type: $scope.selectedItem.name},
       function(chartData) {
         $scope.chartName = 'Historical stats';
         
@@ -941,7 +960,7 @@ function($scope, $routeParams, $location, $interval, Global, Stats, Sync, Chart)
                 "json": chartData.info[chartTypeEnum[i].name],
                 "names":{
                   "date":"Date",
-                  "value": chartTypeEnum[i].title + " (last 30 days)"
+                  "value": chartTypeEnum[i].title + " (" + $scope.selectedItem.title + ")"
                 },
               },
               axis : {
@@ -1396,7 +1415,9 @@ angular.module('insight.stats')
     })
   .factory('Chart',
     function($resource) {
-      return $resource(window.apiPrefix + '/stats/chart');
+      return $resource(window.apiPrefix + '/stats/chart', {
+        type: '@type'
+      });
     })
 
 // Source: public/src/js/services/transactions.js

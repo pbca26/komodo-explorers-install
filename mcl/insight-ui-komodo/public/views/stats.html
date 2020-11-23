@@ -39,9 +39,10 @@
         <div class="row">
           <div class="col-xs-12 col-md-11">
             <div class="page-header">
-              <h3>
-                <span>{{chartName}}</span>
+              <h3 class="marmara-chart-title">
+                <span>Historical stats</span>
               </h3>
+              <select class="marmara-chart-range-selector" ng-options="range as range.title for range in ranges" ng-model="selectedItem" ng-change="updateChartRange()"></select>
             </div>
             <div data-ng-show="loading">
               <span translate>Loading chart...</span> <span class="loader-gif"></span>
@@ -65,3 +66,4 @@
     </div> <!-- END OF COL-8 -->
   </div>
 </section>
+
