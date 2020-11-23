@@ -6,7 +6,23 @@ var Common = require('./common');
 
 var TIP_SYNC_INTERVAL = 10;
 var valueEnum = ['TotalNormals', 'TotalActivated', 'TotalLockedInLoops'];
-// TODO: trigger stats sync on new block event
+var chartRangeEnum = [{
+  name: '7d',
+  title: '7 days',
+  number: 7,
+}, {
+  name: '30d',
+  title: '30 days',
+  number: 30,
+}, {
+  name: '90d',
+  title: '90 days',
+  number: 90,
+}, {
+  name: 'all',
+  title: 'all',
+  number: 777,
+}];
 
 function StatsController(node) {
   this.node = node;
@@ -23,7 +39,12 @@ function StatsController(node) {
       marmaraAmountStatDaily: {},
     },
   };
-  this.thirtyDaysStats = [];
+  this.computedStats = {
+    '7d': {},
+    '30d': {},
+    '90d': {},
+    'all': {},
+  };
   this.currentBlock = 0;
   this.lastBlockChecked = 1;
   this.statsSyncInProgress = false;
@@ -47,7 +68,7 @@ StatsController.prototype.kickStartStatsSync = function() {
   var secondsElapsed = Number(currentEpochTime) - Number(this.lastBlockStatsProcessed / 1000);
 
   if (Math.floor(secondsElapsed) > 60) {
-    self.node.log.info('kickstart stats sync');
+    this.node.log.info('kickstart stats sync');
     this.statsSyncInProgress = false;
   }
 };
@@ -87,17 +108,17 @@ StatsController.prototype.startSync = function() {
     });
   }, TIP_SYNC_INTERVAL * 1000);
 
-  this.generate30DaysStats();
+  this.generateDaysStats();
 
   setInterval(() => {
     if (!self.dataDumpInProgress) {
       fs.writeFile(self.statsPathRaw, JSON.stringify(self.cache.raw), function (err) {
-        if (err) return self.node.log.info(err);
+        if (err) self.node.log.info(err);
         self.node.log.info('marmara raw stats file updated');
       });
 
       fs.writeFile(self.statsPathComputed, JSON.stringify(self.cache.computed), function (err) {
-        if (err) return self.node.log.info(err);
+        if (err) console.log(err);
         self.node.log.info('marmara computed stats file updated');
       });
     }
@@ -159,10 +180,7 @@ StatsController.prototype.syncStatsByHeight = function() {
                 });
               }
               
-              if (height > 2) {
-                // temp: nullify individual blocks data
-                self.generateStatsTotals();
-              }
+              if (height > 2) self.generateStatsTotals();
               self.lastBlockChecked++;
               checkBlock(self.lastBlockChecked);
             }
@@ -185,48 +203,52 @@ StatsController.prototype.generateStatsTotals = function() {
   if (!this.cache.computed.marmaraGroupBlocksByDay[blockDate]) this.cache.computed.marmaraGroupBlocksByDay[blockDate] = [];
   this.cache.computed.marmaraGroupBlocksByDay[blockDate].push(this.cache.computed.marmaraAmountStatByBlocksDiff[this.cache.computed.marmaraAmountStatByBlocksDiff.length - 1]);
   this.cache.computed.marmaraAmountStatDaily[blockDate] = this.cache.computed.marmaraGroupBlocksByDay[blockDate][this.cache.computed.marmaraGroupBlocksByDay[blockDate].length - 1];
-  this.generate30DaysStats();
+  this.generateDaysStats();
 };
 
-StatsController.prototype.generate30DaysStats = function() {
+StatsController.prototype.generateDaysStats = function() {
   var dailyStatsArr = Object.keys(this.cache.computed.marmaraAmountStatDaily);
 
-  for (var a = 0; a < valueEnum.length; a ++) {
-    var statsDateArr = [];
-    var statsValueArr = [];
+  for (var r = 0; r < chartRangeEnum.length; r++) {
+    var slicedDailyStatsArr = dailyStatsArr.slice(chartRangeEnum[r].number !== 777 ? dailyStatsArr.length - chartRangeEnum[r].number : 0, dailyStatsArr.length);
 
-    for (var i = dailyStatsArr.length - 1; i > 0 && dailyStatsArr.length - 1 - i < 30; i--) {
-      var date = new Date(Date.parse(dailyStatsArr[i]));
-      statsDateArr.push(date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1).toString() : date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()));
-      statsValueArr.push(this.cache.computed.marmaraAmountStatDaily[dailyStatsArr[i]][valueEnum[a]]);
+    for (var a = 0; a < valueEnum.length; a ++) {
+      var statsDateArr = [];
+      var statsValueArr = [];
+
+      for (var i = 0; i < slicedDailyStatsArr.length; i++) {
+        var date = new Date(Date.parse(slicedDailyStatsArr[i]));
+        statsDateArr.push(date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1).toString() : date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()));
+        statsValueArr.push(this.cache.computed.marmaraAmountStatDaily[slicedDailyStatsArr[i]][valueEnum[a]]);
+      }
+      
+      if (statsDateArr.length && statsValueArr.length) {
+        this.computedStats[chartRangeEnum[r].name][valueEnum[a]] = {
+          date: statsDateArr,
+          value: statsValueArr,
+        };
+      }
     }
     
-    if (statsDateArr.length && statsValueArr.length) {
-      this.thirtyDaysStats[valueEnum[a]] = {
-        date: statsDateArr,
-        value: statsValueArr,
-      };
-    }
+    this.node.log.info(chartRangeEnum[r].title + ' stats generated');
   }
-
-  self.node.log.info('30 days stats generated');
 }
 
 StatsController.prototype.show30DaysStats = function(req, res) {
   var self = this;
   var type = req.query.type;
 
-  if (Object.keys(this.thirtyDaysStats).length) {
-    if (valueEnum.indexOf(type) > -1) {
+  if (Object.keys(this.computedStats['30d']).length) {
+    if (Object.keys(this.computedStats).indexOf(type) > -1) {
       res.jsonp({
-        info: this.thirtyDaysStats[type]
+        info: this.computedStats[type]
       });
     } else {
       res.jsonp({
         info: {
-          TotalNormals: this.thirtyDaysStats.TotalNormals,
-          TotalActivated: this.thirtyDaysStats.TotalActivated,
-          TotalLockedInLoops: this.thirtyDaysStats.TotalLockedInLoops
+          TotalNormals: this.computedStats['30d'].TotalNormals,
+          TotalActivated: this.computedStats['30d'].TotalActivated,
+          TotalLockedInLoops: this.computedStats['30d'].TotalLockedInLoops
         }
       });
     }
@@ -249,7 +271,7 @@ StatsController.prototype.dumpStatsData = function() {
   this.dataDumpInProgress = true;
   fs.writeFileSync(this.statsPathRaw, JSON.stringify(this.cache.raw));
   fs.writeFileSync(this.statsPathComputed, JSON.stringify(this.cache.computed));
-  self.node.log.info('stats on node stop, dumped data');
+  this.node.log.info('stats on node stop, dumped data');
 };
 
 module.exports = StatsController;
