@@ -47,7 +47,7 @@ StatsController.prototype.kickStartStatsSync = function() {
   var secondsElapsed = Number(currentEpochTime) - Number(this.lastBlockStatsProcessed / 1000);
 
   if (Math.floor(secondsElapsed) > 60) {
-    console.log('kickstart stats sync');
+    self.node.log.info('kickstart stats sync');
     this.statsSyncInProgress = false;
   }
 };
@@ -63,14 +63,14 @@ StatsController.prototype.startSync = function() {
     this.cache.computed = JSON.parse(localCacheComputed);
     if (!this.cache.computed.hasOwnProperty('marmaraAmountStatDaily')) this.cache.computed.marmaraAmountStatDaily = {};
   } catch (e) {
-    console.log(e);
+    self.node.log.info(e);
   }
 
   this.node.services.bitcoind.getInfo(function(err, result) {
     if (!err) {
-      console.log('sync getInfo', result);
+      self.node.log.info('sync getInfo', result);
       self.currentBlock = result.blocks;
-      console.log('stats sync: ' + self.statsSyncInProgress);
+      self.node.log.info('stats sync: ' + self.statsSyncInProgress);
       if (!self.statsSyncInProgress) self.syncStatsByHeight();
     }
   });
@@ -78,10 +78,10 @@ StatsController.prototype.startSync = function() {
   setInterval(() => {
     this.node.services.bitcoind.getInfo(function(err, result) {
       if (!err) {
-        console.log('sync getInfo', result);
+        self.node.log.info('sync getInfo', result);
         self.currentBlock = result.blocks;
         self.kickStartStatsSync();
-        console.log('stats sync: ' + self.statsSyncInProgress);
+        self.node.log.info('stats sync: ' + self.statsSyncInProgress);
         if (!self.statsSyncInProgress) self.syncStatsByHeight();
       }
     });
@@ -92,13 +92,13 @@ StatsController.prototype.startSync = function() {
   setInterval(() => {
     if (!self.dataDumpInProgress) {
       fs.writeFile(self.statsPathRaw, JSON.stringify(self.cache.raw), function (err) {
-        if (err) return console.log(err);
-        console.log('marmara raw stats file updated');
+        if (err) return self.node.log.info(err);
+        self.node.log.info('marmara raw stats file updated');
       });
 
       fs.writeFile(self.statsPathComputed, JSON.stringify(self.cache.computed), function (err) {
-        if (err) return console.log(err);
-        console.log('marmara computed stats file updated');
+        if (err) return self.node.log.info(err);
+        self.node.log.info('marmara computed stats file updated');
       });
     }
   }, 5 * 1000);
@@ -106,7 +106,7 @@ StatsController.prototype.startSync = function() {
 
 StatsController.prototype.syncStatsByHeight = function() {
   var self = this;
-  console.log('marmara sats sync start at ht. ' + self.lastBlockChecked);
+  self.node.log.info('marmara sats sync start at ht. ' + self.lastBlockChecked);
 
   var checkBlock = function(height) {
     if (height < self.currentBlock) {
@@ -115,11 +115,11 @@ StatsController.prototype.syncStatsByHeight = function() {
 
       self.node.services.bitcoind.getBlockOverview(height, function(err, block) {
         if (!err) {
-          //console.log(block);
+          //self.node.log.info(block);
           
           self.node.services.bitcoind.marmaraAmountStat(height, height, function(err, result) {
             if (!err) {
-              //console.log('sync marmaraAmountStat ht.' + height, result);
+              //self.node.log.info('sync marmaraAmountStat ht.' + height, result);
 
               self.cache.raw.marmaraAmountStatByBlocks.push({
                 height: result.BeginHeight,
@@ -137,7 +137,7 @@ StatsController.prototype.syncStatsByHeight = function() {
               });
               
               if (height > 1) {
-                console.log('marmara calc stat diff at ht.cur ' + height + ' ht.prev ' + (height - 1));
+                self.node.log.info('marmara calc stat diff at ht.cur ' + height + ' ht.prev ' + (height - 1));
 
                 self.cache.computed.marmaraAmountStatByBlocksDiff.push({
                   height: result.BeginHeight,
@@ -209,7 +209,7 @@ StatsController.prototype.generate30DaysStats = function() {
     }
   }
 
-  console.log('30 days stats generated');
+  self.node.log.info('30 days stats generated');
 }
 
 StatsController.prototype.show30DaysStats = function(req, res) {
@@ -249,7 +249,7 @@ StatsController.prototype.dumpStatsData = function() {
   this.dataDumpInProgress = true;
   fs.writeFileSync(this.statsPathRaw, JSON.stringify(this.cache.raw));
   fs.writeFileSync(this.statsPathComputed, JSON.stringify(this.cache.computed));
-  console.log('stats on node stop, dumped data');
+  self.node.log.info('stats on node stop, dumped data');
 };
 
 module.exports = StatsController;

@@ -235,7 +235,6 @@ InsightAPI.prototype.setupRoutes = function(app) {
   
   // TODO: move back up, rewrite to use event emitter
   InsightAPI.prototype.stop = function(callback) {
-    console.log('InsightAPI proto stop');
     stats.dumpStatsData();
     setImmediate(callback);
   };
@@ -244,7 +243,7 @@ InsightAPI.prototype.setupRoutes = function(app) {
   app.get('/stats/sync', this.cacheShort(), stats.showStatsSyncProgress.bind(stats));
   app.get('/stats/chart', this.cacheShort(), stats.show30DaysStats.bind(stats));
   stats.startSync();
-  
+
   // Address routes
   var messages = new MessagesController(this.node);
   app.get('/messages/verify', messages.verify.bind(messages));
