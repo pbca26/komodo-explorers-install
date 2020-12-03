@@ -382,6 +382,116 @@ Where "xxx" can be:
   /insight-api/utils/estimatefee[?nbBlocks=2]
 ```
 
+### Marmara Current Stats (total values at chain tip)
+```
+/insight-api/stats
+```
+
+Sample output:
+```
+{
+  "info": {
+    "height": 448741,
+    "TotalNormals": 3857775.2624154678,
+    "TotalPayToScriptHash": 3767.9936752700087,
+    "TotalActivated": 7118844.857024113,
+    "TotalLockedInLoops": 4238739.333000001,
+    "time": 1606592483
+  }
+}
+```
+
+### Marmara Stats Sync Progress
+```
+/insight-api/stats/sync
+```
+
+Sample output:
+```
+{
+  "info": {
+    "chainTip": 448742,
+    "lastBlockChecked": 448742,
+    "progress": "100.00"
+  }
+}
+```
+
+### Marmara Stats Chart Data
+```
+/insight-api/stats/sync
+```
+
+Data is returned for 3 total categories Total Normals, Total Activated, Total Locked In Loops.
+`type url argument` can be one of the following values 7d, 30d, 90d, all.
+
+Sample output:
+```
+{
+  "info":{
+    "TotalNormals":{
+      "date":[
+        "2020-11-22",
+        "2020-11-23",
+        "2020-11-24",
+        "2020-11-25",
+        "2020-11-26",
+        "2020-11-27",
+        "2020-11-28"
+      ],
+      "value":[
+        3736847.2649793806,
+        3810931.2163448017,
+        3822708.0174699975,
+        3784475.6212121565,
+        3901616.3379048198,
+        3891619.4488523407,
+        3857775.2624154678
+      ]
+    },
+    "TotalActivated":{
+      "date":[
+        "2020-11-22",
+        "2020-11-23",
+        "2020-11-24",
+        "2020-11-25",
+        "2020-11-26",
+        "2020-11-27",
+        "2020-11-28"
+      ],
+      "value":[
+        7144494.647768624,
+        7172874.688276155,
+        7202178.728480677,
+        7173599.755561485,
+        7200706.789268912,
+        7153428.82551278,
+        7118844.857024113
+      ]
+    },
+    "TotalLockedInLoops":{
+      "date":[
+        "2020-11-22",
+        "2020-11-23",
+        "2020-11-24",
+        "2020-11-25",
+        "2020-11-26",
+        "2020-11-27",
+        "2020-11-28"
+      ],
+      "value":[
+        4117989.3330000006,
+        4110789.3330000006,
+        4111649.3330000006,
+        4161149.3330000006,
+        4114749.3330000006,
+        4162949.3330000006,
+        4238739.333000001
+      ]
+    }
+  }
+}
+```
 
 ## Web Socket API
 The web socket API is served using [socket.io](http://socket.io).
