@@ -419,11 +419,12 @@ Sample output:
 
 ### Marmara Stats Chart Data
 ```
-/insight-api/stats/sync
+/insight-api/stats/chart?type=30d
 ```
 
 Data is returned for 3 total categories Total Normals, Total Activated, Total Locked In Loops.
-`type url argument` can be one of the following values 7d, 30d, 90d, all.
+
+`type` url argument can be one of the following values 7d, 30d, 90d, all. Default is 30d.
 
 Sample output:
 ```
