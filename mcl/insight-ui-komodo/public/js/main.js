@@ -756,7 +756,7 @@ angular.module('insight.search').controller('SearchController',
     var q = $scope.q;
     $scope.badQuery = false;
     $scope.loading = true;
-
+    
     Block.get({
       blockHash: q
     }, function() {
@@ -854,7 +854,7 @@ angular.module('insight.status').controller('StatusController',
 
 // Source: public/src/js/controllers/stats.js
 angular.module('insight.stats').controller('StatsController',
-function($scope, $routeParams, $location, $interval, Global, Stats, Sync, Chart) {
+function($scope, $routeParams, $location, $interval, Global, Stats, StatsSync, Chart) {
   var syncInterval;
   $scope.global = Global;
   $scope.sync = {};
@@ -891,7 +891,7 @@ function($scope, $routeParams, $location, $interval, Global, Stats, Sync, Chart)
   };
 
   $scope.getSync = function() {
-    Sync.get({},
+    StatsSync.get({},
       function(sync) {
         if (sync.info.progress < 100) {
           $scope.sync.status = 'syncing';
@@ -1242,6 +1242,7 @@ angular.module('insight.blocks')
         method: 'GET',
         interceptor: {
           response: function (res) {
+            console.warn('block res', res);
             return res.data;
           },
           responseError: function (res) {
@@ -1409,7 +1410,7 @@ angular.module('insight.stats')
     function($resource) {
       return $resource(window.apiPrefix + '/stats');
     })
-  .factory('Sync',
+  .factory('StatsSync',
     function($resource) {
       return $resource(window.apiPrefix + '/stats/sync');
     })
