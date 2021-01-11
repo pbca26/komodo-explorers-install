@@ -780,7 +780,7 @@ angular.module('insight.search').controller('SearchController',
               blockHeight: q
             }, function(hash) {
               _resetSearch();
-              $location.path('/block/');
+              $location.path('/block/' + hash.blockHash);
             }, function() { //not found, fail :(
               $scope.loading = false;
               _badQuery();
