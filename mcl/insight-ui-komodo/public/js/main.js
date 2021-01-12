@@ -854,7 +854,7 @@ angular.module('insight.status').controller('StatusController',
 
 // Source: public/src/js/controllers/stats.js
 angular.module('insight.stats').controller('StatsController',
-function($scope, $routeParams, $location, $interval, Global, Stats, StatsSync, Chart) {
+function($scope, $routeParams, $location, $interval, Global, Stats, StatsSync, StatsChart) {
   var syncInterval;
   $scope.global = Global;
   $scope.sync = {};
@@ -946,7 +946,7 @@ function($scope, $routeParams, $location, $interval, Global, Stats, StatsSync, C
       'Dec',
     ];
 
-    Chart.get({type: $scope.selectedItem.name},
+    StatsChart.get({type: $scope.selectedItem.name},
       function(chartData) {
         $scope.chartName = 'Historical stats';
         
@@ -1414,7 +1414,7 @@ angular.module('insight.stats')
     function($resource) {
       return $resource(window.apiPrefix + '/stats/sync');
     })
-  .factory('Chart',
+  .factory('StatsChart',
     function($resource) {
       return $resource(window.apiPrefix + '/stats/chart', {
         type: '@type'
