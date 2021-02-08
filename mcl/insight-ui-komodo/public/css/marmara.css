@@ -63,8 +63,8 @@
   padding: 10px 0 30px 0;
 }
 
-.container {
-  min-width: 1040px;
+#stats {
+  min-width: calc(100% - 50px);
 }
 
 .navbar-form .form-control {
@@ -94,5 +94,11 @@
 @media (max-width: 1000px) {
   .nav.navbar-nav.navbar-right {
     float: none !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .card-box-container {
+    display: block;
   }
 }
