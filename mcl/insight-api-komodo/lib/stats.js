@@ -26,6 +26,7 @@ var chartRangeEnum = [{
 
 function StatsController(node) {
   this.node = node;
+  this.nodeConfig = JSON.parse(fs.readFileSync(this.node.configPath, 'UTF-8'));
   this.statsPathRaw = this.node.configPath.replace('bitcore-node.json', 'marmara-stats-raw.json');
   this.statsPathComputed = this.node.configPath.replace('bitcore-node.json', 'marmara-stats-computed.json');
   this.common = new Common({log: this.node.log});
@@ -142,20 +143,25 @@ StatsController.prototype.syncStatsByHeight = function() {
             if (!err) {
               //self.node.log.info('sync marmaraAmountStat ht.' + height, result);
 
-              self.cache.raw.marmaraAmountStatByBlocks.push({
-                height: result.BeginHeight,
-                TotalNormals: result.TotalNormals,
-                TotalPayToScriptHash: result.TotalPayToScriptHash,
-                TotalActivated: result.TotalActivated,
-                TotalLockedInLoops: result.TotalLockedInLoops,
-                TotalUnknownCC: result.TotalUnknownCC,
-                SpentNormals: result.SpentNormals,
-                SpentPayToScriptHash: result.SpentPayToScriptHash,
-                SpentActivated: result.SpentActivated,
-                SpentLockedInLoops: result.SpentLockedInLoops,
-                SpentUnknownCC: result.SpentUnknownCC,
-                time: block.time,
-              });
+              self.cache.raw.marmaraAmountStatByBlocks.push(
+                self.nodeConfig.mcl && self.nodeConfig.mcl.memoryOptimization === true ?
+                {
+                  height: result.BeginHeight
+                } : {
+                  height: result.BeginHeight,
+                  TotalNormals: result.TotalNormals,
+                  TotalPayToScriptHash: result.TotalPayToScriptHash,
+                  TotalActivated: result.TotalActivated,
+                  TotalLockedInLoops: result.TotalLockedInLoops,
+                  TotalUnknownCC: result.TotalUnknownCC,
+                  SpentNormals: result.SpentNormals,
+                  SpentPayToScriptHash: result.SpentPayToScriptHash,
+                  SpentActivated: result.SpentActivated,
+                  SpentLockedInLoops: result.SpentLockedInLoops,
+                  SpentUnknownCC: result.SpentUnknownCC,
+                  time: block.time,
+                }
+              );
               
               if (height > 1) {
                 self.node.log.info('marmara calc stat diff at ht.cur ' + height + ' ht.prev ' + (height - 1));
@@ -204,6 +210,13 @@ StatsController.prototype.generateStatsTotals = function() {
   this.cache.computed.marmaraGroupBlocksByDay[blockDate].push(this.cache.computed.marmaraAmountStatByBlocksDiff[this.cache.computed.marmaraAmountStatByBlocksDiff.length - 1]);
   this.cache.computed.marmaraAmountStatDaily[blockDate] = this.cache.computed.marmaraGroupBlocksByDay[blockDate][this.cache.computed.marmaraGroupBlocksByDay[blockDate].length - 1];
   this.generateDaysStats();
+  
+  if (self.nodeConfig.mcl &&
+      self.nodeConfig.mcl.memoryOptimization === true &
+      this.cache.computed.marmaraAmountStatByBlocksDiff.length > 1) {
+    self.node.log.info('marmara truncate computed stats at ht.' + (this.cache.computed.marmaraAmountStatByBlocksDiff.length - 2) + ' (mem optimization)');
+    this.cache.computed.marmaraAmountStatByBlocksDiff[this.cache.computed.marmaraAmountStatByBlocksDiff.length - 2] = {};
+  }
 };
 
 StatsController.prototype.generateDaysStats = function() {
